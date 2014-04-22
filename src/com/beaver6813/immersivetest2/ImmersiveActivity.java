@@ -5,9 +5,11 @@ import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.Dialog;
 import android.content.Context;
+import android.graphics.PixelFormat;
 import android.os.Bundle;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -35,7 +37,7 @@ public class ImmersiveActivity extends Activity {
 		  public void onClick(View arg0) {
  
 			// custom dialog
-			final Dialog dialog = new ImmersiveDialog(context);
+			final Dialog dialog = new Dialog(context);
 			dialog.setContentView(R.layout.test_dialog);
 			dialog.setTitle("Title...");
  
@@ -53,11 +55,30 @@ public class ImmersiveActivity extends Activity {
 					dialog.dismiss();
 				}
 			});
- 
+			
+			//Here's the magic..
+			//Set the dialog to not focusable (makes navigation ignore us adding the window)			
+			dialog.getWindow().setFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE, WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
+			
+			//Set the dialog to immersive
+			dialog.getWindow().getDecorView().setSystemUiVisibility(
+	        		context.getWindow().getDecorView().getSystemUiVisibility());
+			
+			//Show the dialog! (Hopefully no soft navigation...)
 			dialog.show();
+			
+			//Clear the not focusable flag from the window
+			dialog.getWindow().clearFlags(WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE);
+			
+			//Update the WindowManager with the new attributes (no nicer way I know of to do this)..
+			WindowManager wm = (WindowManager) context.getSystemService(Context.WINDOW_SERVICE);
+			wm.updateViewLayout(getWindow().getDecorView(), getWindow().getAttributes());
+			
+			//Clearly not ideal but seems to be an Android bug, they should check if the Window has immersive set.
+			
 		  }
 		});
-        
+		        
     }
 	
 	@SuppressLint("NewApi")
@@ -77,7 +98,7 @@ public class ImmersiveActivity extends Activity {
 	                        View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION |
 	                        View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN |
 	                        View.SYSTEM_UI_FLAG_FULLSCREEN |
-	                        View.SYSTEM_UI_FLAG_IMMERSIVE_STICKY |
+	                        View.SYSTEM_UI_FLAG_IMMERSIVE |
 	                        View.SYSTEM_UI_FLAG_HIDE_NAVIGATION);
 	        
 	    }
